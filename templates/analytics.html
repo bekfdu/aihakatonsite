@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Tahlil - Avtosalon Analytics{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8 text-center">Ma'lumotlar tahlili va statistika</h1>
+    
+    {% if error %}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-semibold text-red-800 mb-2">Xatolik</h3>
+        <p class="text-red-600">{{ error }}</p>
+    </div>
+    {% else %}
+    
+    <!-- Statistics Cards -->
+    {% if total_customers %}
+    <div class="grid md:grid-cols-5 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl font-bold text-primary mb-2">{{ total_customers }}</div>
+            <div class="text-gray-600">Jami mijozlar</div>
+        </div>
+        
+        {% if maqsad_stats %}
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl font-bold text-secondary mb-2">{{ maqsad_stats|length }}</div>
+            <div class="text-gray-600">Tashrif turlari</div>
+        </div>
+        {% endif %}
+        
+        {% if jins_stats %}
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl font-bold text-purple-600 mb-2">{{ jins_stats.get('Erkak', 0) }}</div>
+            <div class="text-gray-600">Erkak mijozlar</div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl font-bold text-pink-600 mb-2">{{ jins_stats.get('Ayol', 0) }}</div>
+            <div class="text-gray-600">Ayol mijozlar</div>
+        </div>
+        {% endif %}
+        
+        {% if avg_time_by_purpose %}
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <div class="text-3xl font-bold text-orange-600 mb-2">
+                {{ (avg_time_by_purpose.values() | list | sum / avg_time_by_purpose.values() | list | length) | round(0) | int }}
+            </div>
+            <div class="text-gray-600">O'rtacha vaqt (daq)</div>
+        </div>
+    {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Charts -->
+    {% if plot_url %}
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-bold mb-6">Grafiklar va taqsimotlar</h2>
+        <div class="text-center">
+            <img src="data:image/png;base64,{{ plot_url }}" 
+                 alt="Analytics Charts" 
+                 class="max-w-full h-auto mx-auto rounded-lg shadow-sm">
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Detailed Statistics -->
+    <div class="grid md:grid-cols-3 gap-6">
+        {% if maqsad_stats %}
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-semibold mb-4">Tashrif maqsadlari</h3>
+            <div class="space-y-3">
+                {% for maqsad, count in maqsad_stats.items() %}
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-700">{{ maqsad }}</span>
+                    <div class="flex items-center">
+                        <div class="w-20 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-primary h-2 rounded-full" 
+                                 style="width: {{ (count / total_customers * 100)|round(1) }}%"></div>
+                        </div>
+                        <span class="font-semibold text-primary">{{ count }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if vaqt_stats %}
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-semibold mb-4">Vaqt guruhlari</h3>
+            <div class="space-y-3">
+                {% for vaqt_guruhi, count in vaqt_stats.items() %}
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-700">{{ vaqt_guruhi }}</span>
+                    <div class="flex items-center">
+                        <div class="w-20 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-orange-500 h-2 rounded-full" 
+                                 style="width: {{ (count / total_customers * 100)|round(1) }}%"></div>
+                        </div>
+                        <span class="font-semibold text-orange-600">{{ count }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if avg_time_by_purpose %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-4">Maqsad bo'yicha o'rtacha vaqt</h3>
+        <div class="space-y-3">
+            {% for maqsad, avg_time in avg_time_by_purpose.items() %}
+            <div class="flex justify-between items-center">
+                <span class="text-gray-700">{{ maqsad }}</span>
+                <span class="font-semibold text-blue-600">{{ avg_time }} daq</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+    
+    <!-- API Information -->
+    <div class="mt-8 bg-gray-50 rounded-lg p-6">
+        <h3 class="text-lg font-semibold mb-3">API Endpoints</h3>
+        <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="bg-white p-4 rounded border">
+                <code class="text-blue-600">POST /api/predict</code>
+                <p class="text-gray-600 mt-1">Bashorat qilish uchun</p>
+            </div>
+            <div class="bg-white p-4 rounded border">
+                <code class="text-blue-600">GET /api/stats</code>
+                <p class="text-gray-600 mt-1">Statistika olish uchun</p>
+            </div>
+        </div>
+    </div>
+    
+    {% endif %}
+</div>
+{% endblock %}
